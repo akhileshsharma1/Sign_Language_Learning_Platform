@@ -93,7 +93,6 @@ const ChapterIdPage = async ({
           <Separator />
           
           <div className="p-4">
-            {/* Textarea instead of Preview */}
             <textarea
               value={chapter.description === null ? undefined : chapter.description}
               readOnly
