@@ -2,31 +2,31 @@ import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
 
 const CourseIdPage = async ({
-  params
+params
 }: {
-  params: { courseId: string; }
+params: { courseId: string; }
 }) => {
-  const course = await db.course.findUnique({
+    const course = await db.course.findUnique({
     where: {
-      id: params.courseId,
-    },
+id: params.courseId,
+},
     include: {
       chapter: {
         where: {
-          isPublished: true,
-        },
-        orderBy: {
+isPublished: true,
+    },
+orderBy: {
           position: "asc"
         }
       }
     }
   });
 
-  if (!course) {
+    if (!course) {
     return redirect("/");
   }
 
   return redirect(`/courses/${course.id}`);
-}
- 
+  }
+
 export default CourseIdPage;

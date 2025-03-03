@@ -29,6 +29,7 @@ export const ChapterVideoForm = ({
 }: ChapterVideoFormProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [playerInitTime, setPlayerInitTime] = useState<number | null>(null);
+  const [videoUrl, setVideoUrl] = useState(initialData.videoUrl || "");
 
   const toggleEdit = () => setIsEditing((current) => !current);
 
@@ -36,13 +37,25 @@ export const ChapterVideoForm = ({
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      await axios.patch(`/api/courses/${courseId}/chapters/${chapterId}`, values);
-      toast.success("Chapter updated");
-      toggleEdit();
-      //router.refresh();
-      const url = `/teacher/courses/${courseId}/chapters/${chapterId}`;
-      window.location.assign(url);
-    } catch {
+      if (values.videoUrl) {
+        // Ensure video URL is passed correctly
+        const response = await axios.patch(`/api/courses/${courseId}/chapters/${chapterId}`, {
+          videoUrl: values.videoUrl, // Pass the video URL correctly
+        });
+
+        if (response.status === 200) {
+          toast.success("Chapter updated");
+          toggleEdit();
+          // Refresh the page after the update
+          window.location.assign(`/teacher/courses/${courseId}/chapters/${chapterId}`);
+        } else {
+          toast.error("Failed to update the chapter");
+        }
+      } else {
+        toast.error("Invalid video URL");
+      }
+    } catch (error) {
+      console.error("Error updating chapter video:", error);
       toast.error("Something went wrong");
     }
   };
@@ -90,27 +103,51 @@ export const ChapterVideoForm = ({
         )
       )}
 
-      {isEditing && (
-        <div>
-          <FileUpload
-            endpoint="chapterVideo"
-            onChange={(url) => {
-              if (url) {
-                onSubmit({ videoUrl: url });
-              }
-            }}
-          />
-          <div className="text-xs text-muted-foreground mt-4">
-            Upload this chapter&apos;s video
-          </div>
+{!isEditing && (
+  !initialData?.videoUrl ? (
+    <div className="flex items-center justify-center h-60 bg-slate-200 rounded-md dark:bg-gray-800 dark:text-slate-300">
+      <Video className="h-10 w-10 text-slate-500" />
+    </div>
+  ) : (
+    <div className="relative aspect-video mt-2">
+      {playerInitTime && initialData?.muxData?.playbackId ? (
+        <MuxPlayer
+          playbackId={initialData.muxData.playbackId}
+          player-init-time={playerInitTime}
+        />
+      ) : (
+        <div className="text-center text-sm text-red-500">
+          Playback ID not found. Please check the upload status.
         </div>
       )}
+    </div>
+  )
+)}
 
-      {initialData.videoUrl && !isEditing && (
-        <div className="text-xs text-muted-foreground mt-2">
-          Videos can take a few minutes to process. Refresh the page if video does not appear.
-        </div>
-      )}
+{isEditing && (
+  <div>
+    <FileUpload
+      endpoint="chapterVideo"
+      onChange={(url) => {
+        if (url) {
+          setVideoUrl(url); 
+          onSubmit({ videoUrl: url });
+        } else {
+          toast.error("Failed to upload the video.");
+        }
+      }}
+    />
+    <div className="text-xs text-muted-foreground mt-4">
+      Upload this chapter&apos;s video
+    </div>
+  </div>
+)}
+
+{initialData?.videoUrl && !isEditing && (
+  <div className="text-xs text-muted-foreground mt-2">
+    Videos can take a few minutes to process. Refresh the page if the video does not appear.
+  </div>
+)}
     </div>
   );
 };

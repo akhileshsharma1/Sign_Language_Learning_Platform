@@ -65,15 +65,14 @@ const ChapterIdPage: React.FC<ChapterIdPageProps> = async ({ params }) => {
     <div className="p-6">
       <div className="flex items-center justify-between">
         <div className="w-full">
-          <Link
-            href={`/teacher/courses/${params.courseId}`}
-            className="flex items-center text-sm hover:opacity-75 transition mb-6"
-            legacyBehavior>
-            <span>
+        <Link
+          href={`/teacher/courses/${params.courseId}`}
+          className="flex items-center text-sm hover:opacity-75 transition mb-6">
+          <span className="flex items-center">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to course setup
-            </span>
-          </Link>
+          </span>
+        </Link>
           <div className="flex items-center justify-between w-full">
             <div className="flex flex-col gap-y-2">
               <h1 className="text-2xl font-medium">Chapter Creation</h1>
