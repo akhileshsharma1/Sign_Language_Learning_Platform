@@ -1,10 +1,11 @@
-import { auth } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server";;
 import { redirect } from "next/navigation";
 import { File } from "lucide-react";
 
 import { getChapter } from "@/actions/get-chapter";
 import { Banner } from "@/components/banner";
 import { Separator } from "@/components/ui/separator";
+// import { Preview } from "@/components/preview";
 
 import { VideoPlayer } from "./_components/video-player";
 import { CourseEnrollButton } from "./_components/course-enroll-button";
@@ -36,8 +37,9 @@ const ChapterIdPage = async ({
   });
 
   if (!chapter || !course) {
-    return redirect("/");
+    return redirect("/")
   }
+
 
   const isLocked = !chapter.isFree && !purchase;
   const completeOnEnd = !!purchase && !userProgress?.isCompleted;
@@ -53,10 +55,9 @@ const ChapterIdPage = async ({
       {isLocked && (
         <Banner
           variant="warning"
-          label="You need to purchase this course to access this chapter."
+          label="You need to purchase this course to watch this chapter."
         />
       )}
-      
       <div className="flex flex-col max-w-4xl mx-auto pb-20">
         <div className="p-4">
           <VideoPlayer
@@ -69,7 +70,6 @@ const ChapterIdPage = async ({
             completeOnEnd={completeOnEnd}
           />
         </div>
-        
         <div>
           <div className="p-4 flex flex-col md:flex-row items-center justify-between">
             <h2 className="text-2xl font-semibold mb-2">
@@ -89,40 +89,32 @@ const ChapterIdPage = async ({
               />
             )}
           </div>
-          
           <Separator />
-          
-          <div className="p-4">
-            {/* Textarea instead of Preview */}
+          <div>
+            {/* <Preview value={chapter.description!} /> */}
             <textarea
               value={chapter.description === null ? undefined : chapter.description}
               readOnly
               className="w-full h-60 p-4 border border-gray-300 rounded-md resize-none"
             />
           </div>
-          
           {!!attachments.length && (
             <>
               <Separator />
               <div className="p-4">
-                <h3 className="text-xl font-semibold">
-                  Attachments
-                </h3>
-                <div className="flex flex-col gap-2 mt-2">
-                  {attachments.map((attachment) => (
-                    <a 
-                      href={attachment.url}
-                      target="_blank"
-                      key={attachment.id}
-                      className="flex items-center p-3 w-full bg-sky-200 border text-sky-700 rounded-md hover:underline"
-                    >
-                      <File className="h-4 w-4 mr-2" />
-                      <p className="line-clamp-1">
-                        {attachment.name}
-                      </p>
-                    </a>
-                  ))}
-                </div>
+                {attachments.map((attachment) => (
+                  <a
+                    href={attachment.url}
+                    target="_blank"
+                    key={attachment.id}
+                    className='flex items-center p3 w-full bg-sky-200 dark:bg-sky-800 text-sky-700 dark:text-sky-300 hover:underline'
+                  >
+                    <File />
+                    <p className="line-clamp-1">
+                      {attachment.name}
+                    </p>
+                  </a>
+                ))}
               </div>
             </>
           )}

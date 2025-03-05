@@ -72,12 +72,12 @@ const CreatePage = () => {
                                     <FormControl>
                                         <Input 
                                             disabled={isSubmitting}
-                                            placeholder="e.g. 'Advanced web development'"
+                                            placeholder="e.g. 'American Sign Language'"
                                             {...field}
                                         />
                                     </FormControl>
                                     <FormDescription>
-                                       What will you teach in this course? 
+                                       Which Sign language will you teach?
                                     </FormDescription>
                                     <FormMessage />
                                 </FormItem>

@@ -2,15 +2,26 @@
 
 import * as z from "zod";
 import axios from "axios";
-import MuxPlayer from "@mux/mux-player-react";
 import { Pencil, PlusCircle, Video } from "lucide-react";
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { Chapter, MuxData } from "@prisma/client";
+import Image from "next/image";
+import dynamic from "next/dynamic";
 
 import { Button } from "@/components/ui/button";
 import { FileUpload } from "@/components/file-upload";
+
+// Dynamically import MuxPlayer with SSR disabled to prevent hydration errors
+const MuxPlayer = dynamic(() => import("@mux/mux-player-react"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center h-60 bg-slate-200 rounded-md">
+      <span>Loading player...</span>
+    </div>
+  ),
+});
 
 interface ChapterVideoFormProps {
   initialData: Chapter & { muxData?: MuxData | null };
@@ -28,8 +39,12 @@ export const ChapterVideoForm = ({
   chapterId,
 }: ChapterVideoFormProps) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [playerInitTime, setPlayerInitTime] = useState<number | null>(null);
-  const [videoUrl, setVideoUrl] = useState(initialData.videoUrl || "");
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Ensure component is mounted before rendering client-side components
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const toggleEdit = () => setIsEditing((current) => !current);
 
@@ -37,36 +52,24 @@ export const ChapterVideoForm = ({
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      if (values.videoUrl) {
-        // Ensure video URL is passed correctly
-        const response = await axios.patch(`/api/courses/${courseId}/chapters/${chapterId}`, {
-          videoUrl: values.videoUrl, // Pass the video URL correctly
-        });
-
-        if (response.status === 200) {
-          toast.success("Chapter updated");
-          toggleEdit();
-          // Refresh the page after the update
-          window.location.assign(`/teacher/courses/${courseId}/chapters/${chapterId}`);
-        } else {
-          toast.error("Failed to update the chapter");
-        }
-      } else {
-        toast.error("Invalid video URL");
-      }
-    } catch (error) {
-      console.error("Error updating chapter video:", error);
+      await axios.patch(`/api/courses/${courseId}/chapters/${chapterId}`, values);
+      toast.success("Chapter updated");
+      toggleEdit();
+      router.refresh();
+    } catch {
       toast.error("Something went wrong");
     }
   };
 
-  // Set player-init-time only on the client-side after component mounts
-  useEffect(() => {
-    setPlayerInitTime(Date.now());
-  }, []);
+  // Video player placeholder when not mounted
+  const VideoPlaceholder = () => (
+    <div className="flex items-center justify-center h-60 bg-slate-200 rounded-md">
+      <Video className="h-10 w-10 text-slate-500" />
+    </div>
+  );
 
   return (
-    <div className="mt-6 border bg-slate-100 rounded-md p-4 dark:bg-gray-800 dark:text-slate-300">
+    <div className="mt-6 border bg-slate-100 rounded-md p-4">
       <div className="font-medium flex items-center justify-between">
         Chapter video
         <Button onClick={toggleEdit} variant="ghost">
@@ -85,69 +88,41 @@ export const ChapterVideoForm = ({
           )}
         </Button>
       </div>
-
       {!isEditing && (
         !initialData.videoUrl ? (
-          <div className="flex items-center justify-center h-60 bg-slate-200 rounded-md dark:bg-gray-800 dark:text-slate-300">
-            <Video className="h-10 w-10 text-slate-500" />
-          </div>
+          <VideoPlaceholder />
         ) : (
           <div className="relative aspect-video mt-2">
-            {playerInitTime && (
+            {isMounted && initialData?.muxData?.playbackId ? (
               <MuxPlayer
-                playbackId={initialData?.muxData?.playbackId || ""}
-                player-init-time={playerInitTime} // Set on client side
+                playbackId={initialData.muxData.playbackId}
               />
+            ) : (
+              <VideoPlaceholder />
             )}
           </div>
         )
       )}
-
-{!isEditing && (
-  !initialData?.videoUrl ? (
-    <div className="flex items-center justify-center h-60 bg-slate-200 rounded-md dark:bg-gray-800 dark:text-slate-300">
-      <Video className="h-10 w-10 text-slate-500" />
-    </div>
-  ) : (
-    <div className="relative aspect-video mt-2">
-      {playerInitTime && initialData?.muxData?.playbackId ? (
-        <MuxPlayer
-          playbackId={initialData.muxData.playbackId}
-          player-init-time={playerInitTime}
-        />
-      ) : (
-        <div className="text-center text-sm text-red-500">
-          Playback ID not found. Please check the upload status.
+      {isEditing && (
+        <div>
+          <FileUpload
+            endpoint="chapterVideo"
+            onChange={(url) => {
+              if (url) {
+                onSubmit({ videoUrl: url });
+              }
+            }}
+          />
+          <div className="text-xs text-muted-foreground mt-4">
+            Upload this chapter&apos;s video
+          </div>
         </div>
       )}
-    </div>
-  )
-)}
-
-{isEditing && (
-  <div>
-    <FileUpload
-      endpoint="chapterVideo"
-      onChange={(url) => {
-        if (url) {
-          setVideoUrl(url); 
-          onSubmit({ videoUrl: url });
-        } else {
-          toast.error("Failed to upload the video.");
-        }
-      }}
-    />
-    <div className="text-xs text-muted-foreground mt-4">
-      Upload this chapter&apos;s video
-    </div>
-  </div>
-)}
-
-{initialData?.videoUrl && !isEditing && (
-  <div className="text-xs text-muted-foreground mt-2">
-    Videos can take a few minutes to process. Refresh the page if the video does not appear.
-  </div>
-)}
+      {initialData.videoUrl && !isEditing && (
+        <div className="text-xs text-muted-foreground mt-2">
+          Videos can take a few minutes to process. Refresh the page if video does not appear.
+        </div>
+      )}
     </div>
   );
 };

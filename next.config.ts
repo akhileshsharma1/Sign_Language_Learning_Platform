@@ -5,7 +5,8 @@ const nextConfig: NextConfig = {
     domains: [
       "utfs.io"
     ]
-  }
+  },
+  devIndicators: false,
 };
 
 export default nextConfig;
