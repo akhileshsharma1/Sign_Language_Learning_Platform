@@ -983,12 +983,12 @@ const SignLanguageTranslator = () => {
                     Your browser does not support the audio element.
                   </audio>
                   
-                  {audioCaption && (
+                  {/* {audioCaption && (
                     <div className="mt-4 p-4 bg-blue-50 rounded-lg text-left">
                       <h4 className="font-semibold mb-2 text-blue-800">Generated Caption:</h4>
                       <p className="text-gray-800">{audioCaption}</p>
                     </div>
-                  )}
+                  )} */}
                   
                   {audioProcessingStatus && (
                     <div className={`mt-2 p-2 rounded text-sm ${

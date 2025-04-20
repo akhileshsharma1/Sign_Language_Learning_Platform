@@ -1,6 +1,6 @@
 "use client";
 
-import { BarChart, Compass, Layout, List, Hand } from "lucide-react";
+import { BarChart, Compass, Layout, List, Hand, HelpCircle } from "lucide-react";
 import { SidebarItem } from "./sidebar-item";
 import { usePathname } from "next/navigation";
 
@@ -14,12 +14,17 @@ const guestRoutes = [
         icon: Compass,
         label: "Browse",
         href: "/search",
+    },  
+    {
+        icon: HelpCircle ,
+        label: "Quiz",
+        href: "/quiz",
     },         
     {
         icon: Hand,
         label: "Sign Language",
         href: "/detection",
-    },         
+    },        
 ];
 
 const teacherRoutes = [
